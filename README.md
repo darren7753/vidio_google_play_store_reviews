@@ -1,7 +1,7 @@
 <h1>Scraping Vidio App Reviews from Google Play Store</h1>
 
 <p align="center">
-    <a href="https://darren7753-vidio-google-play-store-reviews-dashboard-0s5usi.streamlit.app/" target="_blank">
+    <a href="https://darren7753-vidio-google-play-store-reviews-dashboard-iajwpn.streamlit.app/" target="_blank">
         <img src="https://static.streamlit.io/badges/streamlit_badge_black_white.svg" alt="Open in Streamlit">
     </a>
 </p>
@@ -12,11 +12,12 @@ Welcome to my GitHub repository for **Scraping Vidio App Reviews from Google Pla
 
 Manually scraping reviews from Google Play Store can be a tedious and time-consuming task. That's why this project was created to simplify the process and make it more accessible to anyone who needs to collect reviews. In this repository, I will be sharing the steps that I took to create this project as a reference for others who may need to do something similar in the future.
 
-<h2>Create a Database in MongoDB Atlas</h2>
+<h2>Walkthrough</h2>
+<h3>Create a Database in MongoDB Atlas</h3>
 
 In order to store all the reviews I would scrape, I needed a database. While there are many cloud database services available, I decided to use MongoDB Atlas for my project, as it offers a free version that can store up to 5 GB of data. You can find more details [here](https://www.mongodb.com/pricing). Once I created my database in MongoDB Atlas, I allowed access from anywhere under the Network Access section, so that my database could be accessed through `GitHub Actions` later on.
 
-<h2>Install Libraries</h2>
+<h3>Install Libraries</h3>
 
 Before starting, I installed and imported the required libraries.
 
@@ -33,7 +34,7 @@ from plotly.subplots import make_subplots
 import streamlit as st
 ```
 
-<h2>Scrape Reviews from Google Play Store</h2>
+<h3>Scrape Reviews from Google Play Store</h3>
 
 For this part, I created two Python scripts as follows:
 
@@ -97,13 +98,13 @@ if len(new_reviews_sliced) > 0:
             collection.insert_many(batch)
 ```
 
-<h2>Automate using GitHub Actions</h2>
+<h3>Automate using GitHub Actions</h3>
 
 To update my database daily at 9 am UTC+7, I used `GitHub Actions`. I created an `actions.yml` file under the `.github/workflows` directory to set up the automated task. However, it's important to note that `GitHub Actions` may not execute at exactly the specified time due to factors such as high traffic or other reasons.
 
-<h2>Create a Dashboard using Streamlit</h2>
+<h3>Create a Dashboard using Streamlit</h3>
 
-I created a [dashboard](https://darren7753-vidio-google-play-store-reviews-dashboard-0s5usi.streamlit.app/) to visualize my findings using the `Streamlit` library and hosted it on `Streamlit Cloud`. I used the `Plotly` library to create interactive graphics for the dashboard. To enhance the dashboard's performance, I implemented a caching mechanism that stores the results of slow function calls, such that they only need to be executed once. For caching, I used the `st.cache_resource` function to cache global resources such as database connections and the `st.cache_data` function to cache computations that return data. The following code shows an example of this:
+I created a [dashboard](https://darren7753-vidio-google-play-store-reviews-dashboard-iajwpn.streamlit.app/) to visualize my findings using the `Streamlit` library and hosted it on `Streamlit Cloud`. I used the `Plotly` library to create interactive graphics for the dashboard. To enhance the dashboard's performance, I implemented a caching mechanism that stores the results of slow function calls, such that they only need to be executed once. For caching, I used the `st.cache_resource` function to cache global resources such as database connections and the `st.cache_data` function to cache computations that return data. The following code shows an example of this:
 
 ```python
 @st.cache_resource
@@ -121,3 +122,6 @@ def load_data():
     return pd.DataFrame(list(collection.find()))
 df = load_data()
 ```
+
+<h2>Conclusion</h2>
+Overall, this project demonstrates the power of automation and how it can simplify tedious and time-consuming tasks. I hope that this repository serves as a helpful reference for others who may need to perform similar tasks in the future. Thank you for reading!
