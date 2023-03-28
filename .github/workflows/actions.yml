@@ -31,10 +31,13 @@ jobs:
           export TZ=UTC+7
           echo "$(date '+%A, %B %d %Y at %H:%M:%S')" > timestamp.txt
 
-      - name: commit changes to timestamp.txt
+      - name: set up git config
         run: |
-          git config --global user.name "darren7753"
-          git config --global user.email "matthewdarren7753@gmail.com"
+          git config user.name "GitHub Actions Bot"
+          git config user.email "<>"
+
+      - name: commit
+        run: |
           git add timestamp.txt
           git commit -m "update timestamp.txt with current timestamp"
           git push origin main
