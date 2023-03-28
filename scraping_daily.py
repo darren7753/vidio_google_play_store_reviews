@@ -55,6 +55,7 @@ if len(new_reviews_sliced) > 0:
             collection.insert_many(batch)
 
 # Insert the current timestamp to MongoDB
-current_timestamp = datetime.now().strftime("%A, %B %d %Y at %H:%M:%S")
-current_timestamp += timedelta(hours=7)
+current_datetime = datetime.now()
+updated_datetime = current_datetime + timedelta(hours=7)
+current_timestamp = updated_datetime.strftime("%A, %B %d %Y at %H:%M:%S")
 collection2.replace_one({}, {"timestamp": current_timestamp}, upsert=True)
