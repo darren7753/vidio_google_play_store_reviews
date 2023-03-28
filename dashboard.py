@@ -96,7 +96,7 @@ start_date_time = datetime.datetime.combine(filter_start_date, datetime.time(0, 
 st.markdown(lnk + "<h2><i class='fab fa-readme' style='font-size: 30px; color: #ed203f;'></i>&nbsp;Read Me</h2>", unsafe_allow_html=True)
 st.markdown("""
     <ul>
-        <li>This dashboard is updated daily at around 9:00 AM local time in Asia/Jakarta.</li>
+        <li>This dashboard is updated daily at around 9 AM local time in Asia/Jakarta.</li>
         <li>The data shown on the dashboard is sourced from Indonesian reviews of the Vidio app on the Google Play Store, specifically from users located in Indonesia.</li>
         <li>By default, this dashboard displays data from the last 30 days when <i>day</i> is selected, from the last 12 weeks when <i>week</i> is selected, and from the last 6 months when <i>month</i> is selected.</li>
         <li>To view the full code for this dashboard, please visit this <a href="https://github.com/darren7753/vidio_google_play_store_reviews">GitHub Repository</a>.</li>
@@ -132,7 +132,6 @@ df.index += 1
 col1, col2, col3 = st.columns(3)
 with col1:
     st.markdown("<h4>Average Rating</h4>", unsafe_allow_html=True)
-    # wch_colour_box = (245, 168, 184)
     wch_colour_box = (255, 255, 255)
     wch_colour_font = (0, 0, 0)
     fontsize = 50
