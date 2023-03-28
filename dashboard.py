@@ -372,8 +372,15 @@ with col2:
     st.plotly_chart(fig,use_container_width=True)
 
 # Show the dataframe
-with st.expander("Click here to see the latest 1,000 reviews"):
-    st.dataframe(df.head(1000))
+with st.expander("Click here to see the latest reviews"):
+    n_rows = st.slider(
+        label="Slide to choose the number of rows to display",
+        min_value=1000,
+        max_value=len(df_sliced),
+        value=1000,
+        step=1000
+    )
+    st.dataframe(df_sliced.head(n_rows))
 
 # Write credit
 st.markdown(lnk + """
