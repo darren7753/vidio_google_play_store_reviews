@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import os
 from google_play_scraper import Sort, reviews, reviews_all, app
-from datetime import datetime
+from datetime import datetime, timedelta
 from pymongo import MongoClient
 
 # Create a connection to MongoDB
@@ -56,4 +56,5 @@ if len(new_reviews_sliced) > 0:
 
 # Insert the current timestamp to MongoDB
 current_timestamp = datetime.now().strftime("%A, %B %d %Y at %H:%M:%S")
+current_timestamp += timedelta(hours=7)
 collection2.replace_one({}, {"timestamp": current_timestamp}, upsert=True)
