@@ -33,8 +33,8 @@ jobs:
 
       - name: commit changes to timestamp.txt
         run: |
-          git config user.name "${{ secrets.USERNAME_GITHUB }}"
-          git config user.email "${{ secrets.EMAIL_GITHUB }}"
+          git config --global user.name "darren7753"
+          git config --global user.email "matthewdarren7753@gmail.com"
           git add timestamp.txt
           git commit -m "update timestamp.txt with current timestamp"
           git push origin main
