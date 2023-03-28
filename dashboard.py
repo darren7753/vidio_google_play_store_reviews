@@ -377,8 +377,7 @@ with st.expander("Click here to see the latest reviews"):
         label="Slide to choose the number of rows to display",
         min_value=1,
         max_value=len(df_sliced),
-        value=1000,
-        step=10
+        value=1000
     )
     st.dataframe(df_sliced.head(n_rows))
 
