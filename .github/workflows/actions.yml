@@ -25,3 +25,16 @@ jobs:
         env:
           MONGODB_URL: ${{ secrets.MONGODB_URL }}
         run: python scraping_daily.py
+
+      - name: write current timestamp to file
+        run: |
+          export TZ=UTC+7
+          echo "$(date '+%A, %B %d %Y at %H:%M:%S')" > timestamp.txt
+
+      - name: commit changes to timestamp.txt
+        run: |
+          git config --global user.name "${{ secrets.USERNAME }}"
+          git config --global user.email "${{ secrets.EMAIL }}"
+          git add timestamp.txt
+          git commit -m "update timestamp.txt with current timestamp"
+          git push origin main

@@ -37,6 +37,12 @@ st.markdown(hide_decoration_bar_style, unsafe_allow_html=True)
 # Title
 st.markdown("<h1 style='text-align: center; color: #ed203f;'>Vidio Reviews Dashboard</h1>", unsafe_allow_html=True)
 
+# Read the contents of timestamp.txt
+with open('timestamp.txt', 'r') as f:
+    timestamp = f.read()
+
+st.markdown(f"Last updated on {timestamp}", unsafe_allow_html=True)
+
 # Create filters
 st.markdown("<br>", unsafe_allow_html=True)
 lnk = '<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.12.1/css/all.css" crossorigin="anonymous">'
@@ -90,7 +96,7 @@ start_date_time = datetime.datetime.combine(filter_start_date, datetime.time(0, 
 st.markdown(lnk + "<h2><i class='fab fa-readme' style='font-size: 30px; color: #ed203f;'></i>&nbsp;Read Me</h2>", unsafe_allow_html=True)
 st.markdown("""
     <ul>
-        <li>This dashboard is updated daily at 09:00 Asia/Jakarta time.</li>
+        <li>This dashboard is updated daily at around 9:00 AM local time in Asia/Jakarta.</li>
         <li>The data shown on the dashboard is sourced from Indonesian reviews of the Vidio app on the Google Play Store, specifically from users located in Indonesia.</li>
         <li>By default, this dashboard displays data from the last 30 days when <i>day</i> is selected, from the last 12 weeks when <i>week</i> is selected, and from the last 6 months when <i>month</i> is selected.</li>
         <li>To view the full code for this dashboard, please visit this <a href="https://github.com/darren7753/vidio_google_play_store_reviews">GitHub Repository</a>.</li>
