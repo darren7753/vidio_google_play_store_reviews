@@ -41,7 +41,7 @@ st.markdown("<h1 style='text-align: center; color: #ed203f;'>Vidio Reviews Dashb
 with open('timestamp.txt', 'r') as f:
     timestamp = f.read()
 
-st.markdown(f"Last updated on {timestamp}", unsafe_allow_html=True)
+st.markdown(f"<p style='text-align: center;'>Last updated on {timestamp}</p>", unsafe_allow_html=True)
 
 # Create filters
 st.markdown("<br>", unsafe_allow_html=True)
