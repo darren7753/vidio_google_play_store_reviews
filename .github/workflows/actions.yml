@@ -25,19 +25,3 @@ jobs:
         env:
           MONGODB_URL: ${{ secrets.MONGODB_URL }}
         run: python scraping_daily.py
-
-      - name: write current timestamp to file
-        run: |
-          export TZ=UTC+7
-          echo "$(date '+%A, %B %d %Y at %H:%M:%S')" > timestamp.txt
-
-      - name: set up git config
-        run: |
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git config user.name "github-actions[bot]"
-
-      - name: commit
-        run: |
-          git add timestamp.txt
-          git commit --allow-empty --author="github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>"
-          git push origin main

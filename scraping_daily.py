@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import os
 from google_play_scraper import Sort, reviews, reviews_all, app
+from datetime import datetime
 from pymongo import MongoClient
 
 # Create a connection to MongoDB
@@ -12,6 +13,7 @@ client = MongoClient(
 )
 db = client["vidio"]
 collection = db["google_play_store_reviews"]
+collection2 = db["current_timestamp"]
 
 # Load the data from MongoDB
 df = pd.DataFrame(list(collection.find()))
@@ -51,3 +53,7 @@ if len(new_reviews_sliced) > 0:
 
         if batch:
             collection.insert_many(batch)
+
+# Insert the current timestamp to MongoDB
+current_timestamp = datetime.now().strftime("%A, %B %d %Y at %H:%M:%S")
+collection2.replace_one({}, {"timestamp": current_timestamp}, upsert=True)

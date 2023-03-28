@@ -34,13 +34,28 @@ hide_decoration_bar_style = """
 """
 st.markdown(hide_decoration_bar_style, unsafe_allow_html=True)
 
+# Create a connection to MongoDB
+@st.cache_resource
+def init_connection():
+    return MongoClient(
+        os.environ["MONGODB_URL"],
+        serverSelectionTimeoutMS=300000
+    )
+
+client = init_connection()
+
 # Title
 st.markdown("<h1 style='text-align: center; color: #ed203f;'>Vidio Reviews Dashboard</h1>", unsafe_allow_html=True)
 
-# Read the contents of timestamp.txt
-with open('timestamp.txt', 'r') as f:
-    timestamp = f.read()
+# Insert timestamp
+@st.cache_data(ttl=600)
+def load_timestamp():
+    db = client["vidio"]
+    collection = db["current_timestamp"]
+    doc = collection.find_one()
+    return doc["timestamp"]
 
+timestamp = load_timestamp()
 st.markdown(f"<p style='text-align: center;'>Last updated on {timestamp}</p>", unsafe_allow_html=True)
 
 # Create filters
@@ -102,16 +117,6 @@ st.markdown("""
         <li>To view the full code for this dashboard, please visit this <a href="https://github.com/darren7753/vidio_google_play_store_reviews">GitHub Repository</a>.</li>
     </ul>
 """, unsafe_allow_html=True)
-
-# Create a connection to MongoDB
-@st.cache_resource
-def init_connection():
-    return MongoClient(
-        os.environ["MONGODB_URL"],
-        serverSelectionTimeoutMS=300000
-    )
-
-client = init_connection()
 
 # Load the data
 @st.cache_data(ttl=600)
