@@ -100,7 +100,7 @@ if len(new_reviews_sliced) > 0:
 
 <h3>Automate using GitHub Actions</h3>
 
-To update my database daily at 9 am UTC+7, I used `GitHub Actions`. I created an `actions.yml` file under the `.github/workflows` directory to set up the automated task. However, it's important to note that `GitHub Actions` may not execute at exactly the specified time due to factors such as high traffic or other reasons.
+To update my database daily at 3 PM UTC+7, I used `GitHub Actions`. I created an `actions.yml` file under the `.github/workflows` directory to set up the automated task. However, it's important to note that `GitHub Actions` may not execute at exactly the specified time due to factors such as high traffic or other reasons.
 
 <h3>Create a Dashboard using Streamlit</h3>
 
