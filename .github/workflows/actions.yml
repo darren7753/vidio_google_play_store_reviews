@@ -24,4 +24,5 @@ jobs:
       - name: execute the script
         env:
           MONGODB_URL: ${{ secrets.MONGODB_URL }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: python scraping_daily.py
