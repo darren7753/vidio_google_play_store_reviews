@@ -252,7 +252,7 @@ def sentiment(x):
         return "Negative"
 df_sliced["sentiment"] = df_sliced["score"].apply(sentiment)
 
-df1 = df_sliced.resample(resample).agg({"score":"mean", "content":"count"}).fillna(0)
+df1 = df_sliced.resample(resample).agg({"score":"mean", "content_original":"count"}).fillna(0)
 df1.columns = ["mean", "count"]
 df1["Count Growth"] = df1["count"].pct_change().fillna(0) * 100
 df1["Mean Growth"] = df1["mean"].pct_change().fillna(0) * 100
