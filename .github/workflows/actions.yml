@@ -2,7 +2,7 @@ name: Scraping Google Play Reviews
 
 on:
   schedule:
-    - cron: 40 8 * * * # At 15:00 UTC+7 every day
+    - cron: 10 9 * * * # At 15:00 UTC+7 every day
 
 jobs:
   build:
