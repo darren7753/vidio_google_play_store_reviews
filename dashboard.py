@@ -45,7 +45,15 @@ def init_connection():
 client = init_connection()
 
 # Title
-st.markdown("<h1 style='text-align: center; color: #ed203f;'>Vidio Reviews Dashboard</h1>", unsafe_allow_html=True)
+st.markdown(
+    """
+    <div style='display: flex; align-items: center; justify-content: center;'>
+        <img src='https://raw.githubusercontent.com/darren7753/vidio_google_play_store_reviews/main/Logo_Vidio.png' height='45px' style='margin-right: -13px;'/>
+        <h1 style='text-align: center; color: #ed203f;'>Reviews Dashboard</h1>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
 # Insert timestamp
 @st.cache_data(ttl=600)
@@ -119,11 +127,15 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Load the data
-@st.cache_data(ttl=600)
+@st.cache_data(ttl=1)
 def load_data():
     db = client["vidio"]
     collection = db["google_play_store_reviews"]
-    return pd.DataFrame(list(collection.find()))
+    query = {"at": {
+        "$gte": start_date_time,
+        "$lte": end_date_time + datetime.timedelta(days=1)
+    }}
+    return pd.DataFrame(list(collection.find(query)))
 
 df = load_data()
 df = df.drop_duplicates()
@@ -204,7 +216,7 @@ with col2:
     st.markdown(lnk + htmlstr, unsafe_allow_html=True)
 
 with col3:
-    st.markdown("<h4>Total Downloads</h4>", unsafe_allow_html=True)
+    st.markdown("<h4>Total Downloads Since Release</h4>", unsafe_allow_html=True)
     wch_colour_box = (255, 255, 255)
     wch_colour_font = (0, 0, 0)
     fontsize = 50
@@ -243,7 +255,7 @@ st.markdown(lnk + "<h2><i class='fas fa-chart-bar' style='font-size: 30px; color
 # Graphic showing number of reviews and average rating
 st.markdown("<h4>Number of Reviews and Average Rating</h4>", unsafe_allow_html=True)
 
-df_sliced = df[(df["at"] >= start_date_time) & (df["at"] <= end_date_time)]
+df_sliced = df.copy()
 df_sliced = df_sliced.set_index("at")
 
 def sentiment(x):
