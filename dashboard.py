@@ -237,6 +237,9 @@ with col3:
     
     st.markdown(lnk + htmlstr, unsafe_allow_html=True)
 
+# Charts
+st.markdown(lnk + "<h2><i class='fas fa-chart-bar' style='font-size: 30px; color: #ed203f;'></i>&nbsp;Charts</h2>", unsafe_allow_html=True)
+
 # Graphic showing number of reviews and average rating
 st.markdown("<h4>Number of Reviews and Average Rating</h4>", unsafe_allow_html=True)
 
@@ -371,16 +374,70 @@ with col2:
     )
     st.plotly_chart(fig,use_container_width=True)
 
-# Show the dataframe
-with st.expander("Click here to see the latest reviews"):
-    n_rows = st.slider(
-        label="Slide to choose the number of rows to display",
-        min_value=1,
-        max_value=len(df_sliced),
-        value=1000
-    )
-    st.dataframe(df_sliced.head(n_rows))
+# Topic Modeling
+st.markdown(lnk + "<h2><i class='fas fa-pen' style='font-size: 30px; color: #ed203f;'></i>&nbsp;Topic Modeling</h2>", unsafe_allow_html=True)
 
+st.write("Our topic modeling feature uses the Latent Dirichlet Allocation (LDA) model to identify relevant topics in neutral to negative reviews with scores of 3 or less. However, there is a possibility of misclassification. Therefore, we continuously work to refine and enhance our model.")
+
+col1, col2 = st.columns(2)
+with col1:
+    st.write("Select one of the following options to view the reviews in the desired language. All translations are performed using the GPT-3.5 Turbo model.")
+
+    st.write("<style>div.row-widget.stRadio > div{flex-direction:row;justify-content: center;} </style>", unsafe_allow_html=True)
+    choose = st.radio(
+        label="label",
+        options=["Indonesian", "Formal Indonesian", "English"],
+        label_visibility="collapsed"
+    )
+
+    if choose == "Indonesian":
+        content_column = "content_original"
+    elif choose == "Formal Indonesian":
+        content_column = "content_formal_indonesian"
+    else:
+        content_column = "content_english"
+
+df_topic_1 = df_sliced[df_sliced["topic"] == "Bad Application"][[content_column, "score"]]
+df_topic_2 = df_sliced[df_sliced["topic"] == "Package"][[content_column, "score"]]
+df_topic_3 = df_sliced[df_sliced["topic"] == "Advertisement"][[content_column, "score"]]
+df_topic_4 = df_sliced[df_sliced["topic"] == "Watching Experience"][[content_column, "score"]]
+
+with col2:
+    st.write("Slide to choose the number of rows to display. Please keep in mind that choosing a higher number may increase the system load.")
+
+    if max([len(df_topic_1), len(df_topic_2), len(df_topic_3), len(df_topic_4)]) < 1000:
+        slider_value = max([len(df_topic_1), len(df_topic_2), len(df_topic_3), len(df_topic_4)])
+    else:
+        slider_value = 1000
+
+    n_rows = st.slider(
+        label="label",
+        min_value=1,
+        max_value=max([len(df_topic_1), len(df_topic_2), len(df_topic_3), len(df_topic_4)]),
+        value=slider_value,
+        label_visibility="collapsed"
+    )
+
+col1, col2 = st.columns(2)
+with col1:
+    pct = len(df_topic_1) / sum([len(df_topic_1), len(df_topic_2), len(df_topic_3), len(df_topic_4)]) * 100
+    st.markdown(f"<h4>Bad Application ({round(pct, 2)}%)</h4>", unsafe_allow_html=True)
+    st.dataframe(df_topic_1.head(n_rows), use_container_width=True)
+with col2:
+    pct = len(df_topic_2) / sum([len(df_topic_1), len(df_topic_2), len(df_topic_3), len(df_topic_4)]) * 100
+    st.markdown(f"<h4>Package ({round(pct, 2)}%)</h4>", unsafe_allow_html=True)
+    st.dataframe(df_topic_2.head(n_rows), use_container_width=True)
+
+col1, col2 = st.columns(2)
+with col1:
+    pct = len(df_topic_3) / sum([len(df_topic_1), len(df_topic_2), len(df_topic_3), len(df_topic_4)]) * 100
+    st.markdown(f"<h4>Advertisement ({round(pct, 2)}%)</h4>", unsafe_allow_html=True)
+    st.dataframe(df_topic_3.head(n_rows), use_container_width=True)
+with col2:
+    pct = len(df_topic_4) / sum([len(df_topic_1), len(df_topic_2), len(df_topic_3), len(df_topic_4)]) * 100
+    st.markdown(f"<h4>Watching Experience ({round(pct, 2)}%)</h4>", unsafe_allow_html=True)
+    st.dataframe(df_topic_4.head(n_rows), use_container_width=True)
+    
 # Write credit
 st.markdown(lnk + """
     <br>
