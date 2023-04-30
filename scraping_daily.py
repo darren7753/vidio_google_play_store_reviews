@@ -70,9 +70,13 @@ def replace_slang(text):
         return res
     except:
         return None
-new_reviews_sliced["replace_slang"] = new_reviews_sliced["content_original"].apply(replace_slang)
+new_reviews_sliced["replace_slang"] = new_reviews_sliced["content"].apply(replace_slang)
 new_reviews_sliced["content_english"] = new_reviews_sliced["replace_slang"].apply(lambda x: translator(x)[0]["translation_text"])
 new_reviews_sliced = new_reviews_sliced.drop("replace_slang", axis=1)
+new_reviews_sliced = new_reviews_sliced[["reviewId", "userName", "userImage", "content", "content_english", "score", "thumbsUpCount", "reviewCreatedVersion", "at", "replyContent", "repliedAt"]]
+new_reviews_sliced = new_reviews_sliced.rename(columns={"content": "content_original"})
+new_reviews_sliced = new_reviews_sliced.replace("", "empty")
+new_reviews_sliced = new_reviews_sliced.fillna("empty")
 
 def not_word(text):
     if not re.search(r"\w", text["content_original"]):
