@@ -8,3 +8,4 @@ spacy==3.5.2
 emoji==2.2.0
 scikit-learn==1.1.2
 transformers==4.27.4
+torch==2.0.0
