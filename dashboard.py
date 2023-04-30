@@ -394,7 +394,7 @@ st.write("Our topic modeling feature uses the Latent Dirichlet Allocation (LDA) 
 
 col1, col2 = st.columns(2)
 with col1:
-    st.write("Select one of the following options to view the reviews in the desired language. We switched from OpenAI's GPT-3.5 Turbo to Meta's NLBB for translating our reviews due to several reasons.")
+    st.write("Select one of the following options to view the reviews in the desired language. We switched from OpenAI's GPT-3.5 Turbo to Meta's NLLB for translating our reviews due to several reasons.")
 
     st.write("<style>div.row-widget.stRadio > div{flex-direction:row;justify-content: center;} </style>", unsafe_allow_html=True)
     choose = st.radio(
