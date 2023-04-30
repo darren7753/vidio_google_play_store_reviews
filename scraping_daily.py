@@ -3,7 +3,6 @@ import numpy as np
 import pandas as pd
 
 import os
-import openai
 import pickle
 
 import re
@@ -16,6 +15,7 @@ from spacy.lang.en.stop_words import STOP_WORDS
 from google_play_scraper import Sort, reviews, reviews_all, app
 from datetime import datetime, timedelta
 from pymongo import MongoClient
+from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, pipeline
 
 # Loading the English model
 nlp = spacy.load("en_core_web_lg")
@@ -49,56 +49,33 @@ new_reviews = new_reviews.fillna("empty")
 common = new_reviews.merge(df, on=["reviewId", "userName"])
 new_reviews_sliced = new_reviews[(~new_reviews.reviewId.isin(common.reviewId)) & (~new_reviews.userName.isin(common.userName))]
 
-# Create a function to normalize the reviews
-def normalize_text(text):
-    if not re.search(r'\w', text):
-        return text
-    for i in range(10):
-        try:
-            openai.api_key = os.environ["OPENAI_API_KEY"]
-            response = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",
-                messages=[
-                    {"role": "user", "content": f'Return 2 lines where the first line is the formal Indonesian word for {text}, starting with "ID: ", followed by the output. The second line should be the English translation, starting with "EN: ", followed by the output'}
-                ]
-            )
-            return response["choices"][0]["message"]["content"]
-        except Exception as e:
-            continue
-    return "empty"
+# Translate all reviews from Indonesian to English
+model = AutoModelForSeq2SeqLM.from_pretrained("facebook/nllb-200-distilled-600M")
+tokenizer = AutoTokenizer.from_pretrained("facebook/nllb-200-distilled-600M")
+translator = pipeline("translation", model=model, tokenizer=tokenizer, src_lang="ind_Latn", tgt_lang="eng_Latn", max_length=400)
 
-# Apply the function to all the reviews
-indonesian, english = [], []
-for row in new_reviews_sliced["content"]:
-    temp = normalize_text(row)
+df_slang = pd.read_csv("colloquial-indonesian-lexicon.csv")
 
-    temp_id = temp.split("\n")[0]
-    temp_id = temp_id.replace('"', '')
-    temp_id = temp_id.replace("\n", "")
-    temp_id = temp_id.replace("ID: ", "")
-    temp_id = temp_id.replace("=> ", "")
-    temp_id = temp_id.replace("= ", "")
-    indonesian.append(temp_id)
-
-    temp_en = temp.split("\n")[-1]
-    temp_en = temp_en.replace('"', '')
-    temp_en = temp_en.replace("\n", "")
-    temp_en = temp_en.replace("EN: ", "")
-    temp_en = temp_en.replace("=> ", "")
-    temp_en = temp_en.replace("= ", "")
-    english.append(temp_en)
-
-# Combine the normalized reviews to the original dataframe
-new_reviews_sliced["content_formal_indonesian"] = indonesian
-new_reviews_sliced["content_english"] = english
-new_reviews_sliced = new_reviews_sliced[["reviewId", "userName", "userImage", "content", "content_formal_indonesian", "content_english", "score", "thumbsUpCount", "reviewCreatedVersion", "at", "replyContent", "repliedAt"]]
-new_reviews_sliced = new_reviews_sliced.rename(columns={"content": "content_original"})
-new_reviews_sliced = new_reviews_sliced.replace("", "empty")
-new_reviews_sliced = new_reviews_sliced.fillna("empty")
+def replace_slang(text):
+    try:
+        text = str(text)
+        text = text.lower()
+        res = ""
+        for item in text.split():
+            if item in df_slang.slang.values:
+                res += df_slang[df_slang["slang"] == item]["formal"].iloc[0]
+            else:
+                res += item
+            res += " "
+        return res
+    except:
+        return None
+new_reviews_sliced["replace_slang"] = new_reviews_sliced["content_original"].apply(replace_slang)
+new_reviews_sliced["content_english"] = new_reviews_sliced["replace_slang"].apply(lambda x: translator(x)[0]["translation_text"])
+new_reviews_sliced = new_reviews_sliced.drop("replace_slang", axis=1)
 
 def not_word(text):
     if not re.search(r"\w", text["content_original"]):
-        text["content_formal_indonesian"] = text["content_original"]
         text["content_english"] = text["content_original"]
     return text
 new_reviews_sliced = new_reviews_sliced.apply(not_word, axis=1)
@@ -106,26 +83,16 @@ new_reviews_sliced = new_reviews_sliced.apply(not_word, axis=1)
 # Add topics to all reviews
 net_new_revews_sliced = new_reviews_sliced.copy()
 net_new_revews_sliced = net_new_revews_sliced[net_new_revews_sliced["score"] <= 3]
-net_new_revews_sliced = net_new_revews_sliced[net_new_revews_sliced["content_formal_indonesian"].notna()]
 net_new_revews_sliced = net_new_revews_sliced[~net_new_revews_sliced["content_original"].str.match(r"[\u263a-\U0001f645]")]
-net_new_revews_sliced = net_new_revews_sliced[["reviewId", "userName", "at", "content_original", "content_formal_indonesian", "content_english", "score"]]
+net_new_revews_sliced = net_new_revews_sliced[["reviewId", "userName", "at", "content_original", "content_english", "score"]]
 
-for i in ["content_formal_indonesian", "content_english"]:
-    net_new_revews_sliced[i] = net_new_revews_sliced[i].str.replace("Baris 1", "")
-    net_new_revews_sliced[i] = net_new_revews_sliced[i].str.replace("Baris 2", "")
-    net_new_revews_sliced[i] = net_new_revews_sliced[i].str.replace("(", "", regex=True)
-    net_new_revews_sliced[i] = net_new_revews_sliced[i].str.replace(")", "", regex=True)
-    net_new_revews_sliced[i] = net_new_revews_sliced[i].apply(lambda x: emoji.replace_emoji(x, ""))
-
+net_new_revews_sliced["content_english"] = net_new_revews_sliced["content_english"].str.replace("Baris 1", "")
+net_new_revews_sliced["content_english"] = net_new_revews_sliced["content_english"].str.replace("Baris 2", "")
+net_new_revews_sliced["content_english"] = net_new_revews_sliced["content_english"].str.replace("(", "", regex=True)
+net_new_revews_sliced["content_english"] = net_new_revews_sliced["content_english"].str.replace(")", "", regex=True)
+net_new_revews_sliced["content_english"] = net_new_revews_sliced["content_english"].apply(lambda x: emoji.replace_emoji(x, ""))
 net_new_revews_sliced["content_english"] = net_new_revews_sliced["content_english"].str.replace("ads", "advertisements")
-
-replace1 = list(net_new_revews_sliced[net_new_revews_sliced["content_english"].str.contains("Note")].index)
-replace2 = list(net_new_revews_sliced[(net_new_revews_sliced["content_english"].str.contains("Indonesian", case=False)) & (net_new_revews_sliced["content_english"].str.contains("dictionary", case=False))].index)
-replace3 = list(net_new_revews_sliced[(net_new_revews_sliced["content_english"].str.contains("Indonesian", case=False)) & (net_new_revews_sliced["content_english"].str.contains("language", case=False))].index)
-
-replace = sorted(list(set(replace1 + replace2 + replace3)))
-
-net_new_revews_sliced.loc[net_new_revews_sliced.index.isin(replace), ["content_formal_indonesian", "content_english"]] = net_new_revews_sliced.loc[net_new_revews_sliced.index.isin(replace), "content_original"]
+net_new_revews_sliced["content_english"] = net_new_revews_sliced["content_english"].str.replace("ad", "advertisements")
 
 def clean(text):
     text = text.lower()
@@ -154,15 +121,14 @@ def lemmatization(text):
 net_new_revews_sliced["content_cleaned"] = net_new_revews_sliced["content_cleaned"].apply(nlp)
 net_new_revews_sliced["content_cleaned"] = net_new_revews_sliced["content_cleaned"].apply(lambda x: lemmatization(x.text))
 
-for i in ["content_cleaned"]:
-    net_new_revews_sliced[i] = net_new_revews_sliced[i].str.replace("world", "", case=False)
-    net_new_revews_sliced[i] = net_new_revews_sliced[i].str.replace("cup", "", case=False)
-    net_new_revews_sliced[i] = net_new_revews_sliced[i].str.replace("final", "", case=False)
-    net_new_revews_sliced[i] = net_new_revews_sliced[i].str.replace("wc", "", case=False)
-    net_new_revews_sliced[i] = net_new_revews_sliced[i].str.replace("football", "", case=False)
-    net_new_revews_sliced[i] = net_new_revews_sliced[i].str.replace("app ", " ", case=False)
-    net_new_revews_sliced[i] = net_new_revews_sliced[i].str.replace("application", "", case=False)
-    net_new_revews_sliced[i] = net_new_revews_sliced[i].str.replace("apk", "", case=False)
+net_new_revews_sliced["content_cleaned"] = net_new_revews_sliced["content_cleaned"].str.replace("world", "", case=False)
+net_new_revews_sliced["content_cleaned"] = net_new_revews_sliced["content_cleaned"].str.replace("cup", "", case=False)
+net_new_revews_sliced["content_cleaned"] = net_new_revews_sliced["content_cleaned"].str.replace("final", "", case=False)
+net_new_revews_sliced["content_cleaned"] = net_new_revews_sliced["content_cleaned"].str.replace("wc", "", case=False)
+net_new_revews_sliced["content_cleaned"] = net_new_revews_sliced["content_cleaned"].str.replace("football", "", case=False)
+net_new_revews_sliced["content_cleaned"] = net_new_revews_sliced["content_cleaned"].str.replace("app ", " ", case=False)
+net_new_revews_sliced["content_cleaned"] = net_new_revews_sliced["content_cleaned"].str.replace("application", "", case=False)
+net_new_revews_sliced["content_cleaned"] = net_new_revews_sliced["content_cleaned"].str.replace("apk", "", case=False)
 
 with open("count_vectorizer.pkl", "rb") as f:
     cv = pickle.load(f)

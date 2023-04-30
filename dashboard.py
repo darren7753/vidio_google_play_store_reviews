@@ -119,6 +119,7 @@ start_date_time = datetime.datetime.combine(filter_start_date, datetime.time(0, 
 st.markdown(lnk + "<h2><i class='fab fa-readme' style='font-size: 30px; color: #ed203f;'></i>&nbsp;Read Me</h2>", unsafe_allow_html=True)
 st.markdown("""
     <ul>
+        <li>This dashboard is still a work in progress and there will be frequent updates in the future.</li>
         <li>This dashboard is updated daily at around 9 AM local time in Asia/Jakarta.</li>
         <li>The data shown on the dashboard is sourced from Indonesian reviews of the Vidio app on the Google Play Store, specifically from users located in Indonesia.</li>
         <li>By default, this dashboard displays data from the last 30 days when <i>day</i> is selected, from the last 12 weeks when <i>week</i> is selected, and from the last 6 months when <i>month</i> is selected.</li>
@@ -389,23 +390,21 @@ with col2:
 # Topic Modeling
 st.markdown(lnk + "<h2><i class='fas fa-pen' style='font-size: 30px; color: #ed203f;'></i>&nbsp;Topic Modeling</h2>", unsafe_allow_html=True)
 
-st.write("Our topic modeling feature uses the Latent Dirichlet Allocation (LDA) model to identify relevant topics in neutral to negative reviews with scores of 3 or less. However, there is a possibility of misclassification. Therefore, we continuously work to refine and enhance our model.")
+st.write("Our topic modeling feature uses the Latent Dirichlet Allocation (LDA) model to identify relevant topics in neutral to negative reviews with scores of 3 or less. However, we are currently using the base model and have not yet fine-tuned it, which may result in misclassifications. We plan to improve the model gradually over time.")
 
 col1, col2 = st.columns(2)
 with col1:
-    st.write("Select one of the following options to view the reviews in the desired language. All translations are performed using the GPT-3.5 Turbo model.")
+    st.write("Select one of the following options to view the reviews in the desired language. We switched from OpenAI's GPT-3.5 Turbo to Meta's NLBB for translating our reviews due to several reasons.")
 
     st.write("<style>div.row-widget.stRadio > div{flex-direction:row;justify-content: center;} </style>", unsafe_allow_html=True)
     choose = st.radio(
         label="label",
-        options=["Indonesian", "Formal Indonesian", "English"],
+        options=["Indonesian", "English"],
         label_visibility="collapsed"
     )
 
     if choose == "Indonesian":
         content_column = "content_original"
-    elif choose == "Formal Indonesian":
-        content_column = "content_formal_indonesian"
     else:
         content_column = "content_english"
 
@@ -433,7 +432,7 @@ with col2:
 col1, col2 = st.columns(2)
 with col1:
     pct = len(df_topic_1) / sum([len(df_topic_1), len(df_topic_2), len(df_topic_3), len(df_topic_4)]) * 100
-    st.markdown(f"<h4>Bad Application ({round(pct, 2)}%)</h4>", unsafe_allow_html=True)
+    st.markdown(f"<h4>Application ({round(pct, 2)}%)</h4>", unsafe_allow_html=True)
     st.dataframe(df_topic_1.head(n_rows), use_container_width=True)
 with col2:
     pct = len(df_topic_2) / sum([len(df_topic_1), len(df_topic_2), len(df_topic_3), len(df_topic_4)]) * 100
