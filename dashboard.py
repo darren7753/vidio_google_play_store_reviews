@@ -388,7 +388,7 @@ with col2:
     st.plotly_chart(fig,use_container_width=True)
 
 # Topic Modeling
-st.markdown(lnk + "<h2><i class='fas fa-pen' style='font-size: 30px; color: #ed203f;'></i>&nbsp;Topic Modeling</h2>", unsafe_allow_html=True)
+st.markdown(lnk + "<h2><i class='fas fa-pen' style='font-size: 30px; color: #ed203f;'></i>&nbsp;Topic Modeling (Work in Progress)</h2>", unsafe_allow_html=True)
 
 st.write("Our topic modeling feature uses the Latent Dirichlet Allocation (LDA) model to identify relevant topics in neutral to negative reviews with scores of 3 or less. However, we are currently using the base model and have not yet fine-tuned it, which may result in misclassifications. We plan to improve the model gradually over time.")
 
@@ -416,10 +416,10 @@ df_topic_4 = df_sliced[df_sliced["topic"] == "Watching Experience"][[content_col
 with col2:
     st.write("Slide to choose the number of rows to display. Please keep in mind that choosing a higher number may increase the system load.")
 
-    if max([len(df_topic_1), len(df_topic_2), len(df_topic_3), len(df_topic_4)]) < 1000:
+    if max([len(df_topic_1), len(df_topic_2), len(df_topic_3), len(df_topic_4)]) < 100:
         slider_value = max([len(df_topic_1), len(df_topic_2), len(df_topic_3), len(df_topic_4)])
     else:
-        slider_value = 1000
+        slider_value = 100
 
     n_rows = st.slider(
         label="label",
