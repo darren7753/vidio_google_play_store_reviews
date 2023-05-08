@@ -39,6 +39,7 @@ result = reviews(
 )
 new_reviews = pd.DataFrame(result[0])
 new_reviews = new_reviews.fillna("empty")
+new_reviews = new_reviews.rename(columns={"content": "content_original"})
 
 # Filter the scraped reviews to exclude any that were previously collected
 common = new_reviews.merge(df, on=["reviewId", "userName"])
