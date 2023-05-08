@@ -143,6 +143,7 @@ df = df.drop_duplicates()
 df = df.drop("_id", axis=1)
 df = df.replace("empty", np.nan)
 df = df.sort_values("at", ascending=False)
+df["content_english"] = df["content_english"].str.replace("[", "", regex=False).str.replace("EN:", "", regex=False).str.replace("]", "", regex=False).str.replace('"', '', regex=False).str.strip()
 df = df.reset_index(drop=True)
 df.index += 1
 
