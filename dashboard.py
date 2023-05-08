@@ -390,11 +390,11 @@ with col2:
 # Topic Modeling
 st.markdown(lnk + "<h2><i class='fas fa-pen' style='font-size: 30px; color: #ed203f;'></i>&nbsp;Topic Modeling (Work in Progress)</h2>", unsafe_allow_html=True)
 
-st.write("Our topic modeling feature uses the Latent Dirichlet Allocation (LDA) model to identify relevant topics in neutral to negative reviews with scores of 3 or less. However, we are currently using the base model and have not yet fine-tuned it, which may result in misclassifications. We plan to improve the model gradually over time.")
+st.write("We use topic modeling with the GPT 3.5 turbo model to identify relevant topics in reviews rated less than or equal to 3. As we improve our model, some misclassification is expected.")
 
 col1, col2 = st.columns(2)
 with col1:
-    st.write("Select one of the following options to view the reviews in the desired language. We switched from OpenAI's GPT-3.5 Turbo to Meta's NLLB for translating our reviews due to several reasons.")
+    st.write("Select one of the following options to view the reviews in the desired language.")
 
     st.write("<style>div.row-widget.stRadio > div{flex-direction:row;justify-content: center;} </style>", unsafe_allow_html=True)
     choose = st.radio(
@@ -408,13 +408,15 @@ with col1:
     else:
         content_column = "content_english"
 
-df_topic_1 = df_sliced[df_sliced["topic"] == "Bad Application"][[content_column, "score"]]
-df_topic_2 = df_sliced[df_sliced["topic"] == "Package"][[content_column, "score"]]
-df_topic_3 = df_sliced[df_sliced["topic"] == "Advertisement"][[content_column, "score"]]
-df_topic_4 = df_sliced[df_sliced["topic"] == "Watching Experience"][[content_column, "score"]]
+df_topic_1 = df_sliced[df_sliced["topic"] == "Advertisement"][[content_column, "score"]]
+df_topic_2 = df_sliced[df_sliced["topic"] == "Watching Experience"][[content_column, "score"]]
+df_topic_3 = df_sliced[df_sliced["topic"] == "Package"][[content_column, "score"]]
+df_topic_4 = df_sliced[df_sliced["topic"] == "Technical"][[content_column, "score"]]
+df_topic_5 = df_sliced[df_sliced["topic"] == "Network"][[content_column, "score"]]
+df_topic_6 = df_sliced[df_sliced["topic"] == "Others"][[content_column, "score"]]
 
 with col2:
-    st.write("Slide to choose the number of rows to display. Please keep in mind that choosing a higher number may increase the system load.")
+    st.write("Slide to choose the number of rows to display.")
 
     if max([len(df_topic_1), len(df_topic_2), len(df_topic_3), len(df_topic_4)]) < 100:
         slider_value = max([len(df_topic_1), len(df_topic_2), len(df_topic_3), len(df_topic_4)])
@@ -431,23 +433,33 @@ with col2:
 
 col1, col2 = st.columns(2)
 with col1:
-    pct = len(df_topic_1) / sum([len(df_topic_1), len(df_topic_2), len(df_topic_3), len(df_topic_4)]) * 100
-    st.markdown(f"<h4>Application ({round(pct, 2)}%)</h4>", unsafe_allow_html=True)
+    pct = len(df_topic_1) / sum([len(df_topic_1), len(df_topic_2), len(df_topic_3), len(df_topic_4), len(df_topic_5), len(df_topic_6)]) * 100
+    st.markdown(f"<h4>Advertisement ({round(pct, 2)}%)</h4>", unsafe_allow_html=True)
     st.dataframe(df_topic_1.head(n_rows), use_container_width=True)
 with col2:
-    pct = len(df_topic_2) / sum([len(df_topic_1), len(df_topic_2), len(df_topic_3), len(df_topic_4)]) * 100
-    st.markdown(f"<h4>Package ({round(pct, 2)}%)</h4>", unsafe_allow_html=True)
+    pct = len(df_topic_2) / sum([len(df_topic_1), len(df_topic_2), len(df_topic_3), len(df_topic_4), len(df_topic_5), len(df_topic_6)]) * 100
+    st.markdown(f"<h4>Watching Experience ({round(pct, 2)}%)</h4>", unsafe_allow_html=True)
     st.dataframe(df_topic_2.head(n_rows), use_container_width=True)
 
 col1, col2 = st.columns(2)
 with col1:
-    pct = len(df_topic_3) / sum([len(df_topic_1), len(df_topic_2), len(df_topic_3), len(df_topic_4)]) * 100
-    st.markdown(f"<h4>Advertisement ({round(pct, 2)}%)</h4>", unsafe_allow_html=True)
+    pct = len(df_topic_3) / sum([len(df_topic_1), len(df_topic_2), len(df_topic_3), len(df_topic_4), len(df_topic_5), len(df_topic_6)]) * 100
+    st.markdown(f"<h4>Package ({round(pct, 2)}%)</h4>", unsafe_allow_html=True)
     st.dataframe(df_topic_3.head(n_rows), use_container_width=True)
 with col2:
-    pct = len(df_topic_4) / sum([len(df_topic_1), len(df_topic_2), len(df_topic_3), len(df_topic_4)]) * 100
-    st.markdown(f"<h4>Watching Experience ({round(pct, 2)}%)</h4>", unsafe_allow_html=True)
+    pct = len(df_topic_4) / sum([len(df_topic_1), len(df_topic_2), len(df_topic_3), len(df_topic_4), len(df_topic_5), len(df_topic_6)]) * 100
+    st.markdown(f"<h4>Technical ({round(pct, 2)}%)</h4>", unsafe_allow_html=True)
     st.dataframe(df_topic_4.head(n_rows), use_container_width=True)
+
+col1, col2 = st.columns(2)
+with col1:
+    pct = len(df_topic_5) / sum([len(df_topic_1), len(df_topic_2), len(df_topic_3), len(df_topic_4), len(df_topic_5), len(df_topic_6)]) * 100
+    st.markdown(f"<h4>Network ({round(pct, 2)}%)</h4>", unsafe_allow_html=True)
+    st.dataframe(df_topic_5.head(n_rows), use_container_width=True)
+with col2:
+    pct = len(df_topic_6) / sum([len(df_topic_1), len(df_topic_2), len(df_topic_3), len(df_topic_4), len(df_topic_5), len(df_topic_6)]) * 100
+    st.markdown(f"<h4>Others ({round(pct, 2)}%)</h4>", unsafe_allow_html=True)
+    st.dataframe(df_topic_6.head(n_rows), use_container_width=True)
     
 # Write credit
 st.markdown(lnk + """

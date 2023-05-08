@@ -1,24 +1,19 @@
 # Import libraries
 import numpy as np
 import pandas as pd
-
 import os
 import pickle
-
 import re
 import emoji
 import string
+import openai
 
-import spacy
-from spacy.lang.en.stop_words import STOP_WORDS
+# import spacy
+# from spacy.lang.en.stop_words import STOP_WORDS
 
 from google_play_scraper import Sort, reviews, reviews_all, app
 from datetime import datetime, timedelta
 from pymongo import MongoClient
-from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, pipeline
-
-# Loading the English model
-nlp = spacy.load("en_core_web_lg")
 
 # Create a connection to MongoDB
 client = MongoClient(
@@ -50,119 +45,115 @@ common = new_reviews.merge(df, on=["reviewId", "userName"])
 new_reviews_sliced = new_reviews[(~new_reviews.reviewId.isin(common.reviewId)) & (~new_reviews.userName.isin(common.userName))]
 
 # Translate all reviews from Indonesian to English
-model = AutoModelForSeq2SeqLM.from_pretrained("facebook/nllb-200-distilled-600M")
-tokenizer = AutoTokenizer.from_pretrained("facebook/nllb-200-distilled-600M")
-translator = pipeline("translation", model=model, tokenizer=tokenizer, src_lang="ind_Latn", tgt_lang="eng_Latn", max_length=400)
+openai.api_key = os.environ["OPENAI_API_KEY"]
+neg_new_reviews_sliced = new_reviews_sliced[new_reviews_sliced["score"] <= 3]
 
-df_slang = pd.read_csv("colloquial-indonesian-lexicon.csv")
+def translate_to_english(text):
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {
+                "role": "user",
+                "content": f'Please translate this Indonesian text "{text}" to english in the format [EN: translation], but if there is no English translation, return [EN: Cannot be translated]. Please make sure write in the format that I requested only.'
+            }
+        ]
+    )
+    return response["choices"][0]["message"]["content"]
 
-def replace_slang(text):
-    try:
-        text = str(text)
-        text = text.lower()
-        res = ""
-        for item in text.split():
-            if item in df_slang.slang.values:
-                res += df_slang[df_slang["slang"] == item]["formal"].iloc[0]
-            else:
-                res += item
-            res += " "
-        return res
-    except:
-        return None
-new_reviews_sliced["replace_slang"] = new_reviews_sliced["content"].apply(replace_slang)
-new_reviews_sliced["content_english"] = new_reviews_sliced["replace_slang"].apply(lambda x: translator(x)[0]["translation_text"])
-new_reviews_sliced = new_reviews_sliced.drop("replace_slang", axis=1)
-new_reviews_sliced = new_reviews_sliced[["reviewId", "userName", "userImage", "content", "content_english", "score", "thumbsUpCount", "reviewCreatedVersion", "at", "replyContent", "repliedAt"]]
-new_reviews_sliced = new_reviews_sliced.rename(columns={"content": "content_original"})
-new_reviews_sliced = new_reviews_sliced.replace("", "empty")
-new_reviews_sliced = new_reviews_sliced.fillna("empty")
+english = []
+for i in neg_new_reviews_sliced["content_original"]:
+    translated_text = "[EN: Cannot be translated]"
+    for j in range(5):
+        try:
+            translated_text = translate_to_english(i)
+            break
+        except:
+            pass
+    english.append(translated_text)
 
-def not_word(text):
-    if not re.search(r"\w", text["content_original"]):
-        text["content_english"] = text["content_original"]
-    return text
-new_reviews_sliced = new_reviews_sliced.apply(not_word, axis=1)
+def find_invalid_indices(english):
+    invalid_indices = []
+    for i, text in enumerate(english):
+        if not re.match(r'^\[EN: [^\[\]]+\]$', text):
+            invalid_indices.append(i)
+    return invalid_indices
 
-# Add topics to all reviews
-net_new_revews_sliced = new_reviews_sliced.copy()
-net_new_revews_sliced = net_new_revews_sliced[net_new_revews_sliced["score"] <= 3]
-net_new_revews_sliced = net_new_revews_sliced[~net_new_revews_sliced["content_original"].str.match(r"[\u263a-\U0001f645]")]
-net_new_revews_sliced = net_new_revews_sliced[["reviewId", "userName", "at", "content_original", "content_english", "score"]]
+invalid_indices = find_invalid_indices(english)
 
-net_new_revews_sliced["content_english"] = net_new_revews_sliced["content_english"].str.replace("Baris 1", "")
-net_new_revews_sliced["content_english"] = net_new_revews_sliced["content_english"].str.replace("Baris 2", "")
-net_new_revews_sliced["content_english"] = net_new_revews_sliced["content_english"].str.replace("(", "", regex=True)
-net_new_revews_sliced["content_english"] = net_new_revews_sliced["content_english"].str.replace(")", "", regex=True)
-net_new_revews_sliced["content_english"] = net_new_revews_sliced["content_english"].apply(lambda x: emoji.replace_emoji(x, ""))
-net_new_revews_sliced["content_english"] = net_new_revews_sliced["content_english"].str.replace("ads", "advertisements")
-net_new_revews_sliced["content_english"] = net_new_revews_sliced["content_english"].str.replace("ad", "advertisements")
+if len(invalid_indices) > 0:
+    english_revision = []
+    for i in [list(neg_new_reviews_sliced["content_original"])[i] for i in invalid_indices]:
+        translated_text = "[EN: Cannot be translated]"
+        for j in range(5):
+            try:
+                while True:
+                    translated_text = translate_to_english(i)
+                    if re.match(r'^\[EN: [^\[\]]+\]$', translated_text):
+                        break
+                break
+            except:
+                pass
+        english_revision.append(translated_text)
 
-def clean(text):
-    text = text.lower()
-    text = re.sub(r'\$\w*', '',str(text ))
-    text = re.sub(r'\bRT\b', '', text)
-    text = re.sub('b\'', '', text)
-    text = re.sub(r'\.{2,}', ' ', text)
-    text = re.sub('@[^\s]+','',text)
-    text = re.sub(r'^RT[\s]+', '', text)
-    text = re.sub('[0-9]+', '', text)
-    text = re.sub(r"http\S+", "", text)
-    text = re.sub(r'(\s)#\w+', r'\1', text)
-    text = text.strip(' "\'')
-    text = re.sub(r'\s+', ' ', text)
-    text = text.translate(str.maketrans("","",string.punctuation))
-    text = text.replace("\n",' ')
-    return text 
-net_new_revews_sliced["content_cleaned"] = net_new_revews_sliced["content_english"].apply(clean)
-net_new_revews_sliced = net_new_revews_sliced[net_new_revews_sliced["content_cleaned"].str.strip().replace("\s+", "") != ""]
-net_new_revews_sliced = net_new_revews_sliced[net_new_revews_sliced["content_cleaned"] != ""]
+    for i, j in zip(invalid_indices, english_revision):
+        english[i] = j
 
-def lemmatization(text):
-    doc = nlp(text)
-    lemmatized_text = " ".join([token.lemma_ for token in doc if not token.is_stop and token.lang_ == 'en'])
-    return lemmatized_text
-net_new_revews_sliced["content_cleaned"] = net_new_revews_sliced["content_cleaned"].apply(nlp)
-net_new_revews_sliced["content_cleaned"] = net_new_revews_sliced["content_cleaned"].apply(lambda x: lemmatization(x.text))
+neg_new_reviews_sliced["content_english"] = english
 
-net_new_revews_sliced["content_cleaned"] = net_new_revews_sliced["content_cleaned"].str.replace("world", "", case=False)
-net_new_revews_sliced["content_cleaned"] = net_new_revews_sliced["content_cleaned"].str.replace("cup", "", case=False)
-net_new_revews_sliced["content_cleaned"] = net_new_revews_sliced["content_cleaned"].str.replace("final", "", case=False)
-net_new_revews_sliced["content_cleaned"] = net_new_revews_sliced["content_cleaned"].str.replace("wc", "", case=False)
-net_new_revews_sliced["content_cleaned"] = net_new_revews_sliced["content_cleaned"].str.replace("football", "", case=False)
-net_new_revews_sliced["content_cleaned"] = net_new_revews_sliced["content_cleaned"].str.replace("app ", " ", case=False)
-net_new_revews_sliced["content_cleaned"] = net_new_revews_sliced["content_cleaned"].str.replace("application", "", case=False)
-net_new_revews_sliced["content_cleaned"] = net_new_revews_sliced["content_cleaned"].str.replace("apk", "", case=False)
+# Apply topic modeling
+def assign_topic(text):
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {
+                "role": "user",
+                "content": f'Please assign one of the topics (Advertisement, Watching Experience, Package, Technical, Network, Others) to this text "{text}" in the format [Topic: assigned topic]. Please make sure write in the format that I requested only.'
+            }
+        ]
+    )
+    return response["choices"][0]["message"]["content"]
 
-with open("count_vectorizer.pkl", "rb") as f:
-    cv = pickle.load(f)
+topics = []
+for i in neg_new_reviews_sliced["content_original"]:
+    labeled_topic = "[Topic: Others]"
+    for j in range(5):
+        try:
+            labeled_topic = assign_topic(i)
+            break
+        except:
+            pass
+    topics.append(labeled_topic)
 
-with open("lda_model.pkl", "rb") as f:
-    LDA = pickle.load(f)
+cleaned_topics = [i for i in topics]
 
-topic_results = LDA.transform(cv.transform(net_new_revews_sliced["content_cleaned"]))
-net_new_revews_sliced["topic"] = topic_results.argmax(axis=1)
+for idx, val in enumerate(cleaned_topics):
+    if "Advertisement" in val:
+        cleaned_topics[idx] = "Advertisement"
+    elif "Watching Experience" in val:
+        cleaned_topics[idx] = "Watching Experience"
+    elif "Package" in val:
+        cleaned_topics[idx] = "Package"
+    elif "Technical" in val:
+        cleaned_topics[idx] = "Technical"
+    elif "Network" in val:
+        cleaned_topics[idx] = "Network"
+    elif "Others" in val:
+        cleaned_topics[idx] = "Others"
 
-def topic_names(x):
-    if x == 0:
-        return "Bad Application"
-    elif x == 1:
-        return "Package"
-    elif x == 2:
-        return "Advertisement"
-    else:
-        return "Watching Experience"
-net_new_revews_sliced["topic"] = net_new_revews_sliced["topic"].apply(topic_names)
+neg_new_reviews_sliced["topic"] = cleaned_topics
 
-df_merged = pd.merge(new_reviews_sliced, net_new_revews_sliced[["topic"]], left_index=True, right_index=True, how="outer")
-df_merged = df_merged.fillna("empty")
+# Merge neg_new_reviews_sliced to new_reviews_sliced
+new_reviews_sliced_merged = pd.merge(new_reviews_sliced, neg_new_reviews_sliced[["topic"]], left_index=True, right_index=True, how="outer")
+new_reviews_sliced_merged = pd.merge(new_reviews_sliced_merged, neg_new_reviews_sliced[["content_english"]], left_index=True, right_index=True, how="outer")
+new_reviews_sliced_merged = new_reviews_sliced_merged[["reviewId", "userName", "userImage", "content_original", "content_english", "score", "thumbsUpCount", "reviewCreatedVersion", "at", "replyContent", "repliedAt", "topic"]]
+new_reviews_sliced_merged = new_reviews_sliced_merged.fillna("empty")
 
 # Update MongoDB with any new reviews that were not previously scraped
-if len(df_merged) > 0:
-    df_merged_dict = df_merged.to_dict("records")
+if len(new_reviews_sliced_merged) > 0:
+    new_reviews_sliced_merged_dict = new_reviews_sliced_merged.to_dict("records")
 
     batch_size = 1_000
-    num_records = len(df_merged_dict)
+    num_records = len(new_reviews_sliced_merged_dict)
     num_batches = num_records // batch_size
 
     if num_records % batch_size != 0:
@@ -171,7 +162,7 @@ if len(df_merged) > 0:
     for i in range(num_batches):
         start_idx = i * batch_size
         end_idx = min(start_idx + batch_size, num_records)
-        batch = df_merged_dict[start_idx:end_idx]
+        batch = new_reviews_sliced_merged_dict[start_idx:end_idx]
 
         if batch:
             collection.insert_many(batch)
