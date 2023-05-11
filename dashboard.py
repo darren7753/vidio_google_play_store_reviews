@@ -13,7 +13,8 @@ import streamlit as st
 # Change the page settings
 st.set_page_config(
     page_title="Vidio Reviews Dashboard",
-    layout="wide"
+    layout="wide",
+    page_icon="https://raw.githubusercontent.com/darren7753/vidio_google_play_store_reviews/main/Logo_Vidio_V2.png"
 )
 
 # Reduce space at the top
@@ -391,7 +392,7 @@ with col2:
 # Topic Modeling
 st.markdown(lnk + "<h2><i class='fas fa-pen' style='font-size: 30px; color: #ed203f;'></i>&nbsp;Topic Modeling (Work in Progress)</h2>", unsafe_allow_html=True)
 
-st.write("We use topic modeling with the GPT 3.5 turbo model to identify relevant topics in reviews rated less than or equal to 3. As we improve our model, some misclassification is expected.")
+st.markdown("We use topic modeling with the <b>GPT 3.5 Turbo</b> model to identify relevant topics in reviews rated less than or equal to 3. As we improve our model, some misclassification is expected.", unsafe_allow_html=True)
 
 col1, col2 = st.columns(2)
 with col1:
@@ -436,31 +437,37 @@ col1, col2 = st.columns(2)
 with col1:
     pct = len(df_topic_1) / sum([len(df_topic_1), len(df_topic_2), len(df_topic_3), len(df_topic_4), len(df_topic_5), len(df_topic_6)]) * 100
     st.markdown(f"<h4>Advertisement ({round(pct, 2)}%)</h4>", unsafe_allow_html=True)
-    st.dataframe(df_topic_1.head(n_rows), use_container_width=True)
+    with st.expander("View more details"):
+        st.dataframe(df_topic_1.head(n_rows), use_container_width=True)
 with col2:
     pct = len(df_topic_2) / sum([len(df_topic_1), len(df_topic_2), len(df_topic_3), len(df_topic_4), len(df_topic_5), len(df_topic_6)]) * 100
     st.markdown(f"<h4>Watching Experience ({round(pct, 2)}%)</h4>", unsafe_allow_html=True)
-    st.dataframe(df_topic_2.head(n_rows), use_container_width=True)
+    with st.expander("View more details"):
+        st.dataframe(df_topic_2.head(n_rows), use_container_width=True)
 
 col1, col2 = st.columns(2)
 with col1:
     pct = len(df_topic_3) / sum([len(df_topic_1), len(df_topic_2), len(df_topic_3), len(df_topic_4), len(df_topic_5), len(df_topic_6)]) * 100
     st.markdown(f"<h4>Package ({round(pct, 2)}%)</h4>", unsafe_allow_html=True)
-    st.dataframe(df_topic_3.head(n_rows), use_container_width=True)
+    with st.expander("View more details"):
+        st.dataframe(df_topic_3.head(n_rows), use_container_width=True)
 with col2:
     pct = len(df_topic_4) / sum([len(df_topic_1), len(df_topic_2), len(df_topic_3), len(df_topic_4), len(df_topic_5), len(df_topic_6)]) * 100
     st.markdown(f"<h4>Technical ({round(pct, 2)}%)</h4>", unsafe_allow_html=True)
-    st.dataframe(df_topic_4.head(n_rows), use_container_width=True)
+    with st.expander("View more details"):
+        st.dataframe(df_topic_4.head(n_rows), use_container_width=True)
 
 col1, col2 = st.columns(2)
 with col1:
     pct = len(df_topic_5) / sum([len(df_topic_1), len(df_topic_2), len(df_topic_3), len(df_topic_4), len(df_topic_5), len(df_topic_6)]) * 100
     st.markdown(f"<h4>Network ({round(pct, 2)}%)</h4>", unsafe_allow_html=True)
-    st.dataframe(df_topic_5.head(n_rows), use_container_width=True)
+    with st.expander("View more details"):
+        st.dataframe(df_topic_5.head(n_rows), use_container_width=True)
 with col2:
     pct = len(df_topic_6) / sum([len(df_topic_1), len(df_topic_2), len(df_topic_3), len(df_topic_4), len(df_topic_5), len(df_topic_6)]) * 100
     st.markdown(f"<h4>Others ({round(pct, 2)}%)</h4>", unsafe_allow_html=True)
-    st.dataframe(df_topic_6.head(n_rows), use_container_width=True)
+    with st.expander("View more details"):
+        st.dataframe(df_topic_6.head(n_rows), use_container_width=True)
     
 # Write credit
 st.markdown(lnk + """
