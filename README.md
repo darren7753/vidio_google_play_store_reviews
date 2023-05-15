@@ -1,4 +1,6 @@
-<h1>Scraping Vidio App Reviews from Google Play Store</h1>
+<a name="readme-top"></a>
+
+<h1>Analyzing Vidio's Google Play Store Reviews</h1>
 
 <p align="center">
     <a href="https://darren7753-vidio-google-play-store-reviews-dashboard-iajwpn.streamlit.app/" target="_blank">
@@ -6,122 +8,44 @@
     </a>
 </p>
 
-<h2>Introduction</h2>
+<h2>🔍Introduction</h2>
 
-Welcome to my GitHub repository for **Scraping Vidio App Reviews from Google Play Store**. This project is all about gathering reviews of the Vidio app from Google Play Store using the `google-play-scraper` library, automating the scraping process with `GitHub Actions`, and presenting the scraped data on a `Streamlit` dashboard that is updated daily.
+Welcome to my GitHub repository for **Analyzing Vidio's Google Play Store Reviews**. For those who may be unfamiliar, [Vidio](https://www.vidio.com/) is an Indonesian streaming platform and the largest OTT (over-the-top) service in the country. The purpose of this project is to delve into public sentiment regarding Vidio and gain valuable insights. One of the methods I employed was analyzing reviews from sources like the Google Play Store.
 
-Manually scraping reviews from Google Play Store can be a tedious and time-consuming task. That's why this project was created to simplify the process and make it more accessible to anyone who needs to collect reviews. In this repository, I will be sharing the steps that I took to create this project as a reference for others who may need to do something similar in the future.
+This project involves the following steps: scraping all the reviews from the Google Play Store using the **google-play-scraper** library, implementing topic modeling to categorize the reviews under specific topics with the assistance of the **GPT-3.5 Turbo** model, storing the acquired reviews in a database, and presenting them through a **Streamlit** dashboard. This entire process is automated using **GitHub Actions**. More details will be shared in the following section.
 
-<h2>Walkthrough</h2>
-<h3>Create a Database in MongoDB Atlas</h3>
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-In order to store all the reviews I would scrape, I needed a database. While there are many cloud database services available, I decided to use MongoDB Atlas for my project, as it offers a free version that can store up to 5 GB of data. You can find more details [here](https://www.mongodb.com/pricing). Once I created my database in MongoDB Atlas, I allowed access from anywhere under the Network Access section, so that my database could be accessed through `GitHub Actions` later on.
+<h2>🚶‍♂️Walkthrough</h2>
 
-<h3>Install Libraries</h3>
+<h3>📲Scraping the Reviews from the Google Play Store</h3>
 
-Before starting, I installed and imported the required libraries.
+The first task was to acquire the data for analysis, specifically the reviews of Vidio. Fortunately, there is a Python library called **google-play-scraper** that simplifies the process of scraping reviews from the Google Play Store for any app. Initially, I scraped all available reviews up until the time of initiating this project. Subsequently, I programmed the script to scrape 5000 reviews daily and filtered out the reviews collected on the previous day.
 
-```python
-import os
-import numpy as np
-import pandas as pd
-from pymongo import MongoClient
-from google_play_scraper import Sort, reviews, reviews_all, app
-import datetime
-from dateutil.relativedelta import relativedelta
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
-import streamlit as st
-```
+<h3>📊Implementing Topic Modeling on the Reviews</h3>
 
-<h3>Scrape Reviews from Google Play Store</h3>
+This stage constitutes the core of the project. Simply collecting the reviews alone does not provide substantial value. To gain deeper insights, I implemented topic modeling specifically on negative and neutral reviews. The objective was to better comprehend the common complaints users have about Vidio with the aim of utilizing the findings for future improvements.
 
-For this part, I created two Python scripts as follows:
+Initially, I attempted to use LDA (Latent Dirichlet Allocation) for topic modeling. However, it proved to be highly inaccurate, resulting in numerous misclassifications. This issue appeared to be attributed to the language aspect. Many language-related techniques excel in English but not in Indonesian, which is not as widely supported. Moreover, the presence of Indonesian slangs and various typographical variations further complicated the matter.
 
-- `scraping.ipynb` for scraping all available reviews until the time I was working on this project.
-- `scraping_daily.py` for scraping 5,000 reviews daily.
+Consequently, I decided to employ one of OpenAI's models, given their extensive training on large datasets. I opted for the **GPT-3.5 Turbo** model, which requires a fee, but is relatively affordable. The cost amounts to approximately $0.002 per 1000 tokens or around 750 words. The results were significantly better than those obtained using LDA, though not entirely perfect. Further fine-tuning could be considered, but that will be a task for future endeavors.
 
-To begin with, I established a connection to my database using the following code:
+<h3>💾Stroring the Reviews in a Database</h3>
 
-```python
-client = MongoClient(
-    "mongodb+srv://USERNAME:PASSWORD@project1.lpu4kvx.mongodb.net/?retryWrites=true&w=majority",
-    serverSelectionTimeoutMS=300000
-)
-db = client["vidio"]
-collection = db["google_play_store_reviews"]
-```
+Once the reviews were obtained, the next step involved storing them. One option was to utilize Google BigQuery, which is widely used. However, after careful consideration, I decided to use **MongoDB Atlas**. It offers a free plan that allows for storage of up to 5 GB, which proved to be more than sufficient in this case. It is worth noting that using MongoDB entails a slightly different querying approach compared to SQL, as MongoDB is a NoSQL database.
 
-However, since the code contained sensitive information such as my username and password, I needed to hide them using `GitHub Secrets`. I created a secret variable called `MONGODB_URL` and passed the sensitive information to it, then I updated my code as follows:
+<h3>📈Creating a Streamlit Dashboard</h3>
 
+To present the findings in an organized and visually appealing manner, I integrated the **MongoDB Atlas** database with a **Streamlit** dashboard. **Streamlit** proved to be an ideal choice, as it offered customization options and supported various Python libraries, including Plotly, which was utilized to generate interactive plots in this project.
 
-```python
-client = MongoClient(
-    os.environ["MONGODB_URL"],
-    serverSelectionTimeoutMS=300000
-)
-db = client["vidio"]
-collection = db["google_play_store_reviews"]
-```
+<h3>⚙️Automating the Entire Process</h3>
 
-Next, I used two functions to scrape the reviews from the Google Play Store. The function `reviews_all()` is used to scrape all reviews, while the function `reviews()` is used to scrape 5,000 reviews daily. Since both functions have similar codes, I will show only one of them:
+With all the components in place, the remaining task was to automate the entire process on a daily basis. Manually repeating these steps every day was not feasible. Fortunately, there are several automation options available, with **GitHub Actions** being one of them. I configured **GitHub Actions** to execute the project workflow daily at 9 AM UTC+7.
 
-```python
-result = reviews(
-    "com.vidio.android",
-    lang="id",
-    country="id",
-    sort=Sort.NEWEST,
-    count=5000 # note that reviews_all() doesn't have the count argument
-)
-```
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-Finally, I stored the scraped reviews in my database in batches of 1,000 reviews to prevent timeout errors using the following code:
+<h2>🎯Conclusion</h2>
 
-```python
-if len(new_reviews_sliced) > 0:
-    new_reviews_sliced_dict = new_reviews_sliced.to_dict("records")
+This project demonstrates the utilization of topic modeling to analyze app reviews. While numerous techniques exist, employing GPT proves to be a viable choice, particularly for languages other than English. It is my hope that this repository serves as a valuable reference for those undertaking similar tasks in the future. Thank you for reading!
 
-    batch_size = 1_000
-    num_records = len(new_reviews_sliced_dict)
-    num_batches = num_records // batch_size
-
-    if num_records % batch_size != 0:
-        num_batches += 1
-
-    for i in range(num_batches):
-        start_idx = i * batch_size
-        end_idx = min(start_idx + batch_size, num_records)
-        batch = new_reviews_sliced_dict[start_idx:end_idx]
-
-        if batch:
-            collection.insert_many(batch)
-```
-
-<h3>Automate using GitHub Actions</h3>
-
-To update my database daily at 3 PM UTC+7, I used `GitHub Actions`. I created an `actions.yml` file under the `.github/workflows` directory to set up the automated task. However, it's important to note that `GitHub Actions` may not execute at exactly the specified time due to factors such as high traffic or other reasons.
-
-<h3>Create a Dashboard using Streamlit</h3>
-
-I created a [dashboard](https://darren7753-vidio-google-play-store-reviews-dashboard-iajwpn.streamlit.app/) to visualize my findings using the `Streamlit` library and hosted it on `Streamlit Cloud`. I used the `Plotly` library to create interactive graphics for the dashboard. To enhance the dashboard's performance, I implemented a caching mechanism that stores the results of slow function calls, such that they only need to be executed once. For caching, I used the `st.cache_resource` function to cache global resources such as database connections and the `st.cache_data` function to cache computations that return data. The following code shows an example of this:
-
-```python
-@st.cache_resource
-def init_connection():
-    return MongoClient(
-        os.environ["MONGODB_URL"],
-        serverSelectionTimeoutMS=300000
-    )
-client = init_connection()
-
-@st.cache_data(ttl=600)
-def load_data():
-    db = client["vidio"]
-    collection = db["google_play_store_reviews"]
-    return pd.DataFrame(list(collection.find()))
-df = load_data()
-```
-
-<h2>Conclusion</h2>
-Overall, this project demonstrates the power of automation and how it can simplify tedious and time-consuming tasks. I hope that this repository serves as a helpful reference for others who may need to perform similar tasks in the future. Thank you for reading!
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
