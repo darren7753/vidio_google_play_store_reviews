@@ -8,6 +8,10 @@
     </a>
 </p>
 
+<p align="center">
+    <img src="https://raw.githubusercontent.com/darren7753/vidio_google_play_store_reviews/main/Thumbnail.png" alt="Thumbnail">
+</p>
+
 <h2>🔍Introduction</h2>
 
 Welcome to my GitHub repository for **Analyzing Vidio's Google Play Store Reviews**. For those who may be unfamiliar, [Vidio](https://www.vidio.com/) is an Indonesian streaming platform and the largest OTT (over-the-top) service in the country. The purpose of this project is to delve into public sentiment regarding Vidio and gain valuable insights. One of the methods I employed was analyzing reviews from sources like the Google Play Store.
@@ -26,7 +30,7 @@ The first task was to acquire the data for analysis, specifically the reviews of
 
 This stage constitutes the core of the project. Simply collecting the reviews alone does not provide substantial value. To gain deeper insights, I implemented topic modeling specifically on negative and neutral reviews. The objective was to better comprehend the common complaints users have about Vidio with the aim of utilizing the findings for future improvements.
 
-Initially, I attempted to use LDA (Latent Dirichlet Allocation) for topic modeling. However, it proved to be highly inaccurate, resulting in numerous misclassifications. This issue appeared to be attributed to the language aspect. Many language-related techniques excel in English but not in Indonesian, which is not as widely supported. Moreover, the presence of Indonesian slangs and various typographical variations further complicated the matter.
+Initially, I attempted to use LDA (Latent Dirichlet Allocation) for topic modeling. However, it proved to be highly inaccurate, resulting in numerous misclassifications. This issue appeared to be attributed to the language aspect. Many language-related techniques excel in English, but not in Indonesian, which is not as widely supported. Moreover, the presence of Indonesian slangs and various typographical variations further complicated the matter.
 
 Consequently, I decided to employ one of OpenAI's models, given their extensive training on large datasets. I opted for the **GPT-3.5 Turbo** model, which requires a fee, but is relatively affordable. The cost amounts to approximately $0.002 per 1000 tokens or around 750 words. The results were significantly better than those obtained using LDA, though not entirely perfect. Further fine-tuning could be considered, but that will be a task for future endeavors.
 
